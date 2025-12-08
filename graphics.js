@@ -2,8 +2,63 @@ const REZ = 100;
 let H = 150;
 let W = 300; 
 
-var sx=sy=1.25, tx=-0.25, ty=0; 
+var last_frac = "mandelbrot"
+var sx=sy=2, tx=-0.5, ty=0; 
 const SCALE_FACTOR = 0.25; 
+
+function reset(no_main=false) {
+  var mandelbrot_pow = document.getElementById("power").value; 
+  var frac = document.getElementById("fractal-type").value;
+  
+  sx=2; sy=2; ty=0; 
+
+  // OG mandelbrot looks a little nicer offset to the side
+  if (mandelbrot_pow == 2 && frac == "mandelbrot") {
+    tx=-0.5; 
+  }
+  else {
+    tx=0; 
+  }
+
+  if (!no_main){
+    main(); 
+  }
+}
+
+function update_frag_vars() {
+  var frac = document.getElementById("fractal-type").value;
+  if (frac == "mandelbrot") {
+    prog = MANDEL_SHADER; 
+  }
+  else if (frac == "julia") {
+    prog = JULIA_SHADER; 
+  } else if (frac == 'newton') {
+    prog = NEWTON_SHADER; 
+  } else {
+    prog = BURNING_SHIP; 
+  }
+
+  // Reset coords between fractal types
+  var mandelbrot_pow = document.getElementById("power").value; 
+  var max_iter = document.getElementById("iterations").value; 
+
+  if (frac != last_frac) {
+    reset(no_main=true); 
+    last_frac = frac;
+
+    if (frac == 'newton' && mandelbrot_pow < 3) {
+      // Newton fractals at 2 are super boring
+      mandelbrot_pow = 3
+      document.getElementById("power").value = 3 
+    }
+  }
+
+
+  prog = prog.replaceAll('[[POW]]', mandelbrot_pow); 
+  prog = prog.replaceAll('[[MAX_ITER]]', max_iter); 
+
+  return prog 
+}
 
 function resizeCanvas(){
     const canvas = document.getElementById('glcanvas');
@@ -38,19 +93,16 @@ function clickCanvas(e, is_right_click) {
   let x = e.clientX - rect.left; x /= size; 
   let y = e.clientY - rect.top; y /= size;
   y = 1-y; 
-  console.log("X: " + x + " Y: " + y)
 
   // Put between -1 and 1
   x = (x-0.5)*2; 
   y = (y-0.5)*2; 
-  console.log("X: " + x + " Y: " + y); 
 
+  // Affine transform 
   let translated_x = x*sx + tx; 
   let translated_y = y*sy + ty; 
   tx = translated_x; 
   ty = translated_y; 
-
-  console.log("A(X): " + tx + " A(Y): " + ty); 
 
   // Left click 
   if (!is_right_click) {
@@ -177,6 +229,14 @@ function set_transforms(gl, u_sx, u_sy, u_tx, u_ty) {
   gl.uniform1f(u_ty, ty);
 }
 
+function set_complex(gl, u_cx, u_cy) {
+  cx = document.getElementById('c-real').value; 
+  cy = document.getElementById('c-imag').value; 
+
+  gl.uniform1f(u_cx, cx); 
+  gl.uniform1f(u_cy, cy); 
+}
+
 function main() {
   const canvas = document.getElementById('glcanvas');
   const gl = canvas.getContext('webgl');
@@ -186,9 +246,13 @@ function main() {
     return;
   }
 
+  // So we can fiddle w the values in the fractal generator
+  // on the user end
+  var dynamic_frag = update_frag_vars(FRAG_SHADER); 
+
   // Shader src defined in shaders.js 
   const vert_shader = buildShader(gl, VERT_SHADER, gl.VERTEX_SHADER)
-  const frag_shader = buildShader(gl, FRAG_SHADER, gl.FRAGMENT_SHADER)
+  const frag_shader = buildShader(gl, dynamic_frag, gl.FRAGMENT_SHADER)
   const program = createProgam(gl, vert_shader, frag_shader); 
 
   // Tell gl to use the shader program
@@ -199,7 +263,11 @@ function main() {
   const u_sy = gl.getUniformLocation(program, "s_y");
   const u_tx = gl.getUniformLocation(program, "t_x");
   const u_ty = gl.getUniformLocation(program, "t_y");
-  set_transforms(gl, u_sx, u_sy, u_tx, u_ty)
+  const u_cx = gl.getUniformLocation(program, "cx");
+  const u_cy = gl.getUniformLocation(program, "cy");
+  
+  set_transforms(gl, u_sx, u_sy, u_tx, u_ty); 
+  set_complex(gl, u_cx, u_cy); 
 
   // Make webGL canvas size match what we defined <canvas> as
   resizeCanvas(gl); 

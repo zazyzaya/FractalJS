@@ -30,48 +30,49 @@ void main() {
     v_color = a_color; 
 }`
 
-var FRAG_SHADER = 
+var MANDEL_SHADER = 
 `// fragment shaders don't have a default precision so we need
 // to pick one. mediump is a good default
 precision mediump float;
 
 varying vec4 v_color; 
 varying vec2 v_xy;  // 0–1 pixel coordinates
+const int MAX_P = 100; 
 
-// TODO use this instead
-vec2 pow(float in_x, float in_y, int p) {
-    float out_x=in_x; float out_y=in_y; 
-    
-    for (int i=0; i<2; i++) {
-        out_x = out_x*in_x - out_y*in_y;
-        out_y = out_y*in_x + out_x*in_y;
+vec2 complex_mult(vec2 a, vec2 b) {
+    vec2 out_v; 
+    out_v.x = a.x * b.x - a.y * b.y;
+    out_v.y = a.y * b.x + a.x * b.y;
+
+    return out_v; 
+}
+
+vec2 complex_pow(vec2 in_v, int p) {
+    vec2 out_v = vec2(in_v.xy); 
+
+    for (int i=1; i<MAX_P; i++) {
+        if (i >= p) { break; }
+        out_v = complex_mult(in_v, out_v); 
     }
     
-    return vec2(out_x, out_y);
+    return out_v; 
 }
 
 void main() {
     // gl_FragColor is a special variable a fragment shader
     // is responsible for setting
-
-    float a = v_xy.x;   // real axis
-    float b = v_xy.y;   // imaginary axis
-
-    float z_a = a*a - b*b; 
-    float z_b = 2.0*a*b; 
+    vec2 z = vec2(v_xy); 
     
-    const int max_iter = 100;
+    const int max_iter = [[MAX_ITER]];
     const float escape = 4.0; 
     int n = 0; 
+    vec2 z_pow; 
 
     for (int i=0; i<max_iter; i++) {
-        float temp_a = z_a * z_a - z_b * z_b + a;
-        float temp_b = 2.0 * z_a * z_b + b;
+        z_pow = complex_pow(z, [[POW]]); 
+        z = z_pow + v_xy; 
 
-        z_a = temp_a;
-        z_b = temp_b;
-
-        if (z_a * z_a + z_b * z_b > escape) {
+        if (z.x * z.x + z.y * z.y > escape) {
             break;
         }
 
@@ -80,7 +81,7 @@ void main() {
 
     float t= float(n) / float(max_iter); 
     gl_FragColor = vec4(
-        0.25 + 0.75 * sin(3.0 + t * 5.0),
+        0.25 + 0.75 * sin(t * 5.0),
         1. - 0.5 * sin(1.0 + t * 5.0),
         0.5 + 0.5 * sin(2.0 + t * 5.0),
         1.
@@ -90,3 +91,239 @@ void main() {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } 
 }`
+
+var JULIA_SHADER = `// fragment shaders don't have a default precision so we need
+// to pick one. mediump is a good default
+precision mediump float;
+
+uniform float cx; 
+uniform float cy; 
+
+varying vec4 v_color; 
+varying vec2 v_xy;  // 0–1 pixel coordinates
+
+const int MAX_P = 100; 
+
+vec2 complex_mult(vec2 a, vec2 b) {
+    vec2 out_v; 
+    out_v.x = a.x * b.x - a.y * b.y;
+    out_v.y = a.y * b.x + a.x * b.y;
+
+    return out_v; 
+}
+
+vec2 complex_pow(vec2 in_v, int p) {
+    vec2 out_v = vec2(in_v.xy); 
+
+    for (int i=1; i<MAX_P; i++) {
+        if (i >= p) { break; }
+        out_v = complex_mult(in_v, out_v); 
+    }
+    
+    return out_v; 
+}
+
+void main() {
+    // gl_FragColor is a special variable a fragment shader
+    // is responsible for setting
+    vec2 z = vec2(v_xy); 
+    vec2 c = vec2(cx, cy); 
+    
+    const int max_iter = [[MAX_ITER]];
+    const float escape = 4.0; 
+    int n = 0; 
+    vec2 z_pow; 
+
+    for (int i=0; i<max_iter; i++) {
+        z_pow = complex_pow(z, [[POW]]); 
+        z = z_pow + c; 
+
+        if (z.x * z.x + z.y * z.y > escape) {
+            break;
+        }
+
+        n++; 
+    }
+
+    float t= float(n) / float(max_iter); 
+    gl_FragColor = vec4(
+        0.25 + 0.75 * sin(t * 5.0),
+        1. - 0.5 * sin(1.0 + t * 5.0),
+        0.5 + 0.5 * sin(2.0 + t * 5.0),
+        1.
+    );
+
+    if (n==max_iter) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+}`
+
+var NEWTON_SHADER = `// fragment shaders don't have a default precision so we need
+// to pick one. mediump is a good default
+precision mediump float;
+
+uniform float cx; 
+uniform float cy; 
+
+varying vec4 v_color; 
+varying vec2 v_xy;  // 0–1 pixel coordinates
+
+const int MAX_P = 100; 
+
+vec2 complex_mult(vec2 a, vec2 b) {
+    vec2 out_v; 
+    out_v.x = a.x * b.x - a.y * b.y;
+    out_v.y = a.y * b.x + a.x * b.y;
+
+    return out_v; 
+}
+
+vec2 complex_pow(vec2 in_v, int p) {
+    vec2 out_v = vec2(in_v.xy); 
+
+    for (int i=1; i<MAX_P; i++) {
+        if (i >= p) { break; }
+        out_v = complex_mult(in_v, out_v); 
+    }
+    
+    return out_v; 
+}
+
+vec2 complex_divide(vec2 numer, vec2 denom) {
+    vec2 conjugate = vec2(denom.x, -denom.y); 
+    numer = complex_mult(numer, conjugate); 
+    denom = complex_mult(denom, conjugate); 
+
+    numer.x = numer.x / denom.x; 
+    numer.y = numer.y / denom.x; // No imaginary part
+
+    return numer; 
+}
+
+void main() {
+    // gl_FragColor is a special variable a fragment shader
+    // is responsible for setting
+    vec2 z = vec2(v_xy); 
+    vec2 c = vec2(cx, cy); 
+    
+    const int max_iter = [[MAX_ITER]];
+    const float escape = 4.0; 
+    int n = 0; 
+    vec2 z_numer, z_denom; 
+
+    for (int i=0; i<max_iter; i++) {
+        z_numer = complex_pow(z, [[POW]]); 
+        z_numer.x = z_numer.x - cx; 
+        z_numer.y = z_numer.y - cy; 
+
+        z_denom = [[POW]].0 * complex_pow(z, [[POW]]-1); 
+        z_numer = complex_divide(z_numer, z_denom); 
+
+        z = z - z_numer; 
+    }
+
+    gl_FragColor = vec4(
+        sin(z.x),
+        sin(z.x),
+        sin(z.y),
+        1.
+    );
+
+    if (n==max_iter) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+}`
+
+var BURNING_SHIP = `// fragment shaders don't have a default precision so we need
+// to pick one. mediump is a good default
+precision mediump float;
+
+uniform float cx; 
+uniform float cy; 
+
+varying vec4 v_color; 
+varying vec2 v_xy;  // 0–1 pixel coordinates
+
+const int MAX_P = 100; 
+
+vec2 complex_mult(vec2 a, vec2 b) {
+    vec2 out_v; 
+    out_v.x = a.x * b.x - a.y * b.y;
+    out_v.y = a.y * b.x + a.x * b.y;
+
+    return out_v; 
+}
+
+vec2 complex_pow(vec2 in_v, int p) {
+    vec2 out_v = vec2(in_v.xy); 
+
+    for (int i=1; i<MAX_P; i++) {
+        if (i >= p) { break; }
+        out_v = complex_mult(in_v, out_v); 
+    }
+    
+    return out_v; 
+}
+
+vec2 complex_divide(vec2 numer, vec2 denom) {
+    vec2 conjugate = vec2(denom.x, -denom.y); 
+    numer = complex_mult(numer, conjugate); 
+    denom = complex_mult(denom, conjugate); 
+
+    numer.x = numer.x / denom.x; 
+    numer.y = numer.y / denom.x; // No imaginary part
+
+    return numer; 
+}
+
+void main() {
+    // gl_FragColor is a special variable a fragment shader
+    // is responsible for setting
+    vec2 c = vec2(v_xy.x, -v_xy.y);
+    vec2 z = vec2(c); 
+    
+    const int max_iter = [[MAX_ITER]];
+    const float escape = 4.0; 
+    int n = 0; 
+    vec2 tmp; 
+    float modulus; 
+
+    for (int i=0; i<max_iter; i++) {
+        tmp.x = abs(z.x); 
+        tmp.y = abs(z.y); 
+        z = complex_pow(tmp, [[POW]]) + c; 
+
+        modulus = z.x * z.x + z.y * z.y;
+        if (modulus > escape) {
+            break;
+        }
+
+        n++; 
+    }
+
+    /*
+    modulus = sqrt(modulus); 
+    float t = float(n) - (log(log(modulus))) / log(2.); 
+    gl_FragColor = vec4(
+        sin(t),
+        sin(1.0 + t),
+        sin(2.0 + t),
+        1.
+    );
+    */
+
+
+    float t = float(n) / float(max_iter); 
+    gl_FragColor = vec4(
+        0.25 + 0.75 * sin(t * 5.0),
+        1. - 0.5 * sin(1.0 + t * 5.0),
+        0.5 + 0.5 * sin(2.0 + t * 5.0),
+        1.
+    );
+
+    if (n==max_iter) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    } 
+}`
+
+var FRAG_SHADER = MANDEL_SHADER

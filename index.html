@@ -7,8 +7,56 @@
     </head>
     <body onload = 'main()'>
         <canvas id="glcanvas"></canvas>
+
         <script src='https://webgl2fundamentals.org/webgl/resources/webgl-utils.js'></script>
         <script src="shaders.js"></script>
         <script src="graphics.js"></script>
+
+        <div id="fractal-controls">
+            <div class="header">
+                Fractal Controls
+                <button id="toggle-panel">-</button>
+            </div>
+
+            <div class="panel-body">
+                <label for="fractal-type">Fractal type:</label>
+                <select id="fractal-type" name="fractal-type">
+                    <option value="mandelbrot">Mandelbrot</option>
+                    <option value="julia">Julia Set</option>
+                    <option value="newton">Newton</option>
+                    <option value="ship">Burning Ship</option>
+                </select>
+
+                <div class="inline-inputs">
+                    <div class="input-group">
+                        <label for="power">Exponent:</label>
+                        <input type="number" id="power" name="power" step="any" value="2" class="quick-change">
+                    </div>
+                    <div class="input-group">
+                        <label for="iterations">Iterations:</label>
+                        <input type="number" id="iterations" name="iterations" value="100" step="25" class="quick-change">
+                    </div>
+                </div>
+
+                <div class="inline-inputs" id="complex-selection" style="display: none;">
+                    <div class="input-group">
+                        <label for="c-real">C real:</label>
+                        <input type="number" id="c-real" name="c-real" step="0.005" value="-0.81" class="quick-change">
+                    </div>
+                    <div class="input-group">
+                        <label for="c-imag">C imag:</label>
+                        <input type="number" id="c-imag" name="c-imag" step="0.005" value="0.155" class="quick-change">
+                    </div>
+                </div>
+
+                <div class="inline-inputs">
+                    <img src="img/mandelbrot.png" id="eq-img"/>
+                </div>
+
+                <button id="update" onclick="main()">Update</button>
+                <button id="reset" onclick="reset()">Reset</button>
+            </div>
+        </div>
+        <script src="ui.js"></script>
     </body>
 </html>
