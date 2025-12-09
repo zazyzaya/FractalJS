@@ -19,8 +19,8 @@ function reset(no_main=false) {
     tx=-0.5; 
   }
   else if (frac == "lyap") {
-    tx=3.5; ty=3.5; 
-    sx=0.5; sy=0.5; 
+    tx=2; ty=2; 
+    sx=2; sy=2; 
   }
   else {
     tx=0; 
@@ -90,7 +90,7 @@ function resizeCanvas(){
     gl.viewport(0, 0, sq, sq);
 }
 
-window.addEventListener('resize', () => resizeCanvas());
+window.addEventListener('resize', () => main());
 document.getElementById('glcanvas').addEventListener('click', (e) => clickCanvas(e, false)); 
 document.getElementById('glcanvas').addEventListener('contextmenu', (e) => clickCanvas(e, true)); 
 

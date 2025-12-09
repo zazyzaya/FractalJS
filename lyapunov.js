@@ -23,12 +23,5 @@ function to_binary_sequence(seq) {
         out = [0,1]; 
     }
 
-    // WebGL can't handle arr[i % len] for some reason.
-    // This isn't the most efficient way, but it will work 
-    var true_out = []; 
-    for (let i=0; i<shader_iters; i++) {
-        true_out.push(out[i % out.length])
-    }
-
-    return true_out; 
+    return out; 
 }

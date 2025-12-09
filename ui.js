@@ -28,10 +28,10 @@ fractalSelect.addEventListener('change', (event) => {
   c_div = document.getElementById("complex-selection")
   if (value == 'julia' || value == 'newton' || value == 'lyap') {
     const complex = document.getElementById("complex-part"); 
-
     c_div.style.display = "flex"; 
     if (value == 'lyap') {
       complex.style.display = "none"; 
+      
     }
     else {
       complex.style.display = "flex"; 
@@ -42,11 +42,14 @@ fractalSelect.addEventListener('change', (event) => {
   }
 
   const lyap_div = document.getElementById("lyap-str") 
+  const exp_div = document.getElementById("exponent-div") 
   if (value == 'lyap') {
     lyap_div.style.display = "flex"; 
+    exp_div.style.display = "none"
   }
   else {
     lyap_div.style.display = "none"; 
+    exp_div.style.display = "flex"; 
   }
 
   img = document.getElementById('eq-img')

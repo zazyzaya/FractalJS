@@ -333,14 +333,14 @@ uniform float cx;
 uniform float cy; 
 
 // No way to pass bools. Oh well 
-uniform float u_values[256];
+const int MAX_LEN = 256;
+uniform float u_values[MAX_LEN];
 uniform float u_str_len; 
 
 varying vec4 v_color; 
 varying vec2 v_xy;  // 0–1 pixel coordinates
 
 const int MAX_P = 100; 
-const int skip_iter = int(min(float([[MAX_ITER]]) / 2.0, 10.0));
 
 void main() {
     // gl_FragColor is a special variable a fragment shader
@@ -351,36 +351,63 @@ void main() {
     }
 
     float x = cx; 
-
     float r_i; 
-    if (int(u_values[0]) == 1) {
-        r_i = v_xy.x; 
-    }
-    else {
-        r_i = v_xy.y;
-    }
-    r_i = clamp(r_i, 0.0001, 4.0);
+    int seq_len = int(u_str_len); 
 
-    float lambda = log(abs(r_i * (1.-2.*x))); 
-    int len = int(u_str_len); 
-    
-    const int max_iter = [[MAX_ITER]];
-    for (int i=1; i<max_iter; i++) {
+    // Do one round without logs for stability
+    for (int i=0; i<MAX_LEN; i++) {
+        if (i == seq_len) { break; }
+
         if (int(u_values[i]) == 1) {
             r_i = v_xy.x; 
         }
         else {
             r_i = v_xy.y;
         }
-        r_i = clamp(r_i, 0.0001, 4.0);
-
         x = r_i * x * (1.-x); 
-
-        if (i > skip_iter) {
-            lambda += log(abs(r_i * (1.-2.*x)));
-        }
     }
+    
+    const int max_iter = [[MAX_ITER]];
+    float sum_log_deriv = 0.;
+    float prod_deriv;  
 
+    for (int i=0; i<max_iter; i++) {
+        prod_deriv = 1.; 
+
+        // Iterate through full string
+        for (int i=0; i<MAX_LEN; i++) {
+            if (i == seq_len) { break; }
+
+            if (int(u_values[i]) == 1) {
+                r_i = v_xy.x; 
+            }
+            else {
+                r_i = v_xy.y;
+            }
+            prod_deriv *= r_i * (1.-2.*x);
+            x = r_i * x * (1.-x); 
+        }
+        sum_log_deriv += log(abs(prod_deriv)); 
+    }
+    
+    float lambda = sum_log_deriv / (float(max_iter)*u_str_len); 
+
+    // Copying code from https://github.com/RokerHRO/lyapunov/
+    // for coloring algo 
+    float lambda_min = -2.55;
+    float lambda_max = 0.3959;
+
+    if (lambda > 0.) { 
+        gl_FragColor = vec4(
+            0., 0., lambda / lambda_max, 1
+        );
+    } else {
+        float r = 1. - pow(lambda/lambda_min, 2./3.); 
+        float g = 1. - pow(lambda/lambda_min, 1./3.); 
+        gl_FragColor = vec4(r,g,0.,1.);
+    }
+    
+    /*
     float t = lambda / float(max_iter - skip_iter); 
     if (lambda > 0.) {
         gl_FragColor = vec4(
@@ -392,6 +419,7 @@ void main() {
     } else {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }
+    */
     
 }`
 
