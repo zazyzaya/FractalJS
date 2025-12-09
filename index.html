@@ -10,6 +10,7 @@
 
         <script src='https://webgl2fundamentals.org/webgl/resources/webgl-utils.js'></script>
         <script src="shaders.js"></script>
+        <script src="lyapunov.js"></script>
         <script src="graphics.js"></script>
 
         <div id="fractal-controls">
@@ -25,6 +26,7 @@
                     <option value="julia">Julia Set</option>
                     <option value="newton">Newton</option>
                     <option value="ship">Burning Ship</option>
+                    <option value="lyap">Lyapunov</option>
                 </select>
 
                 <div class="inline-inputs">
@@ -43,11 +45,18 @@
                         <label for="c-real">C real:</label>
                         <input type="number" id="c-real" name="c-real" step="0.005" value="-0.81" class="quick-change">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" id="complex-part">
                         <label for="c-imag">C imag:</label>
                         <input type="number" id="c-imag" name="c-imag" step="0.005" value="0.155" class="quick-change">
                     </div>
                 </div>
+
+                <div class="inline-inputs lyap">
+                    <div class="input-group">
+                        <label for="lyap-str">Binary String</label>
+                        <input id="lyap-str" name="lyap-str" value="01" class="quick-change">
+                    </div>
+                </div> 
 
                 <div class="inline-inputs">
                     <img src="img/mandelbrot.png" id="eq-img"/>

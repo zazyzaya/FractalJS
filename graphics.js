@@ -3,6 +3,8 @@ let H = 150;
 let W = 300; 
 
 var last_frac = "mandelbrot"
+var shader_iters = 100; 
+
 var sx=sy=2, tx=-0.5, ty=0; 
 const SCALE_FACTOR = 0.25; 
 
@@ -15,6 +17,10 @@ function reset(no_main=false) {
   // OG mandelbrot looks a little nicer offset to the side
   if (mandelbrot_pow == 2 && frac == "mandelbrot") {
     tx=-0.5; 
+  }
+  else if (frac == "lyap") {
+    tx=3.5; ty=3.5; 
+    sx=0.5; sy=0.5; 
   }
   else {
     tx=0; 
@@ -34,13 +40,17 @@ function update_frag_vars() {
     prog = JULIA_SHADER; 
   } else if (frac == 'newton') {
     prog = NEWTON_SHADER; 
-  } else {
+  } else if (frac == 'ship') {
     prog = BURNING_SHIP; 
+  } else {
+    prog = LYAPUNYAV_SHADER; 
   }
 
   // Reset coords between fractal types
   var mandelbrot_pow = document.getElementById("power").value; 
   var max_iter = document.getElementById("iterations").value; 
+
+  shader_iters = max_iter; 
 
   if (frac != last_frac) {
     reset(no_main=true); 
@@ -51,8 +61,11 @@ function update_frag_vars() {
       mandelbrot_pow = 3
       document.getElementById("power").value = 3 
     }
-  }
 
+    if (frac == "lyap") {
+      document.getElementById("c-real").value = 0.25
+    }
+  }
 
   prog = prog.replaceAll('[[POW]]', mandelbrot_pow); 
   prog = prog.replaceAll('[[MAX_ITER]]', max_iter); 
@@ -237,6 +250,15 @@ function set_complex(gl, u_cx, u_cy) {
   gl.uniform1f(u_cy, cy); 
 }
 
+function set_lyapunov(gl, u_bin, u_len) {
+  const seq = document.getElementById('lyap-str').value; 
+  const bin_arr = to_binary_sequence(seq); 
+  const arr_len = bin_arr.length; 
+
+  gl.uniform1fv(u_bin, new Float32Array(bin_arr)); 
+  gl.uniform1f(u_len, arr_len); 
+}
+
 function main() {
   const canvas = document.getElementById('glcanvas');
   const gl = canvas.getContext('webgl');
@@ -268,6 +290,13 @@ function main() {
   
   set_transforms(gl, u_sx, u_sy, u_tx, u_ty); 
   set_complex(gl, u_cx, u_cy); 
+
+  // Only needed for Lyapunov
+  if (last_frac == 'lyap') {
+    const u_bin = gl.getUniformLocation(program, "u_values");
+    const u_len = gl.getUniformLocation(program, "u_str_len");
+    set_lyapunov(gl, u_bin, u_len); 
+  }
 
   // Make webGL canvas size match what we defined <canvas> as
   resizeCanvas(gl); 
@@ -335,16 +364,4 @@ function main() {
   var indexType = gl.UNSIGNED_SHORT; 
 
   gl.drawElements(primitiveType, count, indexType, offset);
-  //requestAnimationFrame(() => drawFrame(gl, c_buf, v_data));
-}
-
-function drawFrame(gl, c_buf, v_data) {
-  // Tell gl to actually draw the points we made
-  var primitiveType = gl.TRIANGLES; 
-  var offset = 0; // Start at the beginning of the array
-  var count = v_data.t_cnt; // Execute 3 times for 3 vertexes
-  var indexType = gl.UNSIGNED_SHORT; 
-
-  gl.drawElements(primitiveType, count, indexType, offset);
-  requestAnimationFrame(() => drawFrame(gl, c_buf, v_data));
 }

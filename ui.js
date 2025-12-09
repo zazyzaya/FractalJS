@@ -26,11 +26,27 @@ fractalSelect.addEventListener('change', (event) => {
   const value = event.target.value;
   
   c_div = document.getElementById("complex-selection")
-  if (value == 'julia' || value == 'newton') {
+  if (value == 'julia' || value == 'newton' || value == 'lyap') {
+    const complex = document.getElementById("complex-part"); 
+
     c_div.style.display = "flex"; 
+    if (value == 'lyap') {
+      complex.style.display = "none"; 
+    }
+    else {
+      complex.style.display = "flex"; 
+    }
   }
   else {
     c_div.style.display = "none"; 
+  }
+
+  const lyap_div = document.getElementById("lyap-str") 
+  if (value == 'lyap') {
+    lyap_div.style.display = "flex"; 
+  }
+  else {
+    lyap_div.style.display = "none"; 
   }
 
   img = document.getElementById('eq-img')
