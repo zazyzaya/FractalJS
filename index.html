@@ -3,7 +3,8 @@
     <head>
         <link rel="stylesheet" href="style.css">
         <meta charset="utf-8" />
-        <title>WebGL Demo</title>
+        <title>Fractal Generator</title>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
     </head>
     <body onload = 'main()'>
         <canvas id="glcanvas"></canvas>
@@ -51,7 +52,7 @@
                     </div>
                 </div>
 
-                <div class="inline-inputs lyap">
+                <div class="inline-inputs" id="lyap" style="display: none;">
                     <div class="input-group">
                         <label for="lyap-str">Binary String</label>
                         <input id="lyap-str" name="lyap-str" value="01" class="quick-change">

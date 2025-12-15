@@ -41,7 +41,7 @@ fractalSelect.addEventListener('change', (event) => {
     c_div.style.display = "none"; 
   }
 
-  const lyap_div = document.getElementById("lyap-str") 
+  const lyap_div = document.getElementById("lyap") 
   const exp_div = document.getElementById("exponent-div") 
   if (value == 'lyap') {
     lyap_div.style.display = "flex"; 
